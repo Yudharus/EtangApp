@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 💸 Etang App — Smart Personal Finance & Receipt Tracker
 
-## Getting Started
+**Etang App** (E-Tang) is a modern, intelligent personal finance web application built to simplify expense tracking, budget management, and financial goal setting. Powered by client-side OCR image processing, Etang App allows users to scan physical receipts, auto-extract purchase metadata, and seamlessly manage transactions in real time.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## ✨ Key Features
+
+- **📊 Financial Analytics Dashboard**: Instant overview of net balance, total income, total expenses, monthly budget utilization, and cashflow charts powered by Recharts.
+- **🧾 Smart OCR Receipt Scanner**: Built-in client-side Optical Character Recognition (OCR) using Tesseract.js and HTML5 canvas image processing to auto-detect merchant names, itemized lists, dates, and total amounts directly from uploaded or captured receipts.
+- **💸 Transaction Management**: Filter, search, and manage income, expense, and deposit transactions effortlessly.
+- **🏷️ Category & Budget Management**: Custom categories with monthly budget caps, spending progress indicators, and visual color-coding.
+- **🎯 Savings Goals & Deposit Tracking**: Set financial milestones, track deposit progress towards goals, and monitor completion percentages.
+- **🎨 Atomic Design System**: Clean, modular UI components built using Atomic Design principles (Atoms, Molecules, Organisms, Templates) featuring smooth Framer Motion animations and responsive styling.
+
+---
+
+## 🛠️ Tech Stack (Frontend)
+
+> **Note**: This application is currently running purely on the **Frontend** with mock/dummy data managed via client-side state. No backend server or database is required.
+
+- **Core Framework**: [Next.js 16 (App Router)](https://nextjs.org/) + [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
+- **Styling & UI Components**: [Tailwind CSS v4](https://tailwindcss.com/), [Framer Motion](https://www.framer.com/motion/), [Lucide React Icons](https://lucide.dev/)
+- **State Management**: [Zustand v5](https://zustand-demo.pmnd.rs/) (Client-side state management with mock data)
+- **Data Visualization**: [Recharts](https://recharts.org/)
+- **Client-Side OCR & Image Processing**: [Tesseract.js](https://tesseract.projectnaptha.com/) + HTML5 Canvas API
+
+---
+
+## 📁 Project Structure
+
+```text
+etang-app/
+├── app/                  # Next.js App Router (pages, layout, global styles)
+├── components/           # Atomic Design Component Architecture
+│   ├── atoms/            # Basic UI elements (buttons, inputs, badges)
+│   ├── molecules/        # Combinations of atoms (form fields, stat cards)
+│   ├── organisms/        # Complex UI modules (header, transaction tables, scanner modal)
+│   └── templates/        # Page layout structures
+├── stores/               # Zustand state stores & initial mock datasets
+├── types/                # TypeScript interface and type definitions
+├── utils/                # Utility modules (OCR engine, canvas image processor, formatters)
+└── public/               # Static assets & OCR trained language data
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🚀 Getting Started
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Prerequisites
 
-## Learn More
+Ensure you have [Node.js](https://nodejs.org/) (v18+ recommended) installed on your machine.
 
-To learn more about Next.js, take a look at the following resources:
+### Installation
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   cd etang-app
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-## Deploy on Vercel
+3. **Run the development server**:
+   ```bash
+   npm run dev
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+4. **Open in browser**:
+   Navigate to [http://localhost:3000](http://localhost:3000) to view the app.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 📜 Available Scripts
+
+- `npm run dev` — Starts the Next.js development server.
+- `npm run build` — Builds the application for production.
+- `npm run start` — Runs the production build server.
+- `npm run lint` — Runs ESLint for code quality checks.
+
+---
+
+## 📄 License
+
+This project is open-source and available under the [MIT License](LICENSE).
