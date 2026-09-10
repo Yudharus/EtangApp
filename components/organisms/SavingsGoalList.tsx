@@ -6,8 +6,10 @@ import { GoalCard } from '@/components/molecules/GoalCard';
 import { Button } from '@/components/atoms/Button';
 import { Modal } from '@/components/atoms/Modal';
 import { Input } from '@/components/atoms/Input';
+import { RupiahInput } from '@/components/atoms/RupiahInput';
+import { DatePicker } from '@/components/atoms/DatePicker';
 import { formatRupiah } from '@/utils/cn';
-import { Plus, Target, PiggyBank } from 'lucide-react';
+import { Plus, Target, PiggyBank, AlertCircle } from 'lucide-react';
 
 export const SavingsGoalList: React.FC = () => {
   const {
@@ -26,8 +28,13 @@ export const SavingsGoalList: React.FC = () => {
   // Form states for new Goal
   const [goalTitle, setGoalTitle] = useState('');
   const [targetAmount, setTargetAmount] = useState('10000000');
-  const [targetDate, setTargetDate] = useState('2026-12-31');
+  const [targetDate, setTargetDate] = useState(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 6);
+    return d.toISOString().split('T')[0];
+  });
   const [goalNotes, setGoalNotes] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Deposit amount state
   const [depositAmount, setDepositAmount] = useState('500000');
@@ -36,10 +43,23 @@ export const SavingsGoalList: React.FC = () => {
 
   const handleCreateGoal = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!goalTitle.trim()) return;
+    const trimmed = goalTitle.trim();
+    if (!trimmed) {
+      setErrorMessage('Judul target tabungan tidak boleh kosong.');
+      return;
+    }
+
+    // Check duplicate (case-insensitive)
+    const isDuplicate = savingsGoals.some(
+      (g) => g.title.trim().toLowerCase() === trimmed.toLowerCase()
+    );
+    if (isDuplicate) {
+      setErrorMessage(`Target tabungan "${trimmed}" sudah terdaftar. Silakan gunakan judul lain.`);
+      return;
+    }
 
     addSavingsGoal({
-      title: goalTitle,
+      title: trimmed,
       targetAmount: Number(targetAmount),
       targetDate: targetDate,
       color: 'emerald',
@@ -48,6 +68,15 @@ export const SavingsGoalList: React.FC = () => {
     });
 
     setGoalTitle('');
+    setGoalNotes('');
+    setErrorMessage('');
+    setAddGoalOpen(false);
+  };
+
+  const handleCloseGoalModal = () => {
+    setGoalTitle('');
+    setGoalNotes('');
+    setErrorMessage('');
     setAddGoalOpen(false);
   };
 
@@ -90,16 +119,26 @@ export const SavingsGoalList: React.FC = () => {
       {/* Add New Goal Modal */}
       <Modal
         isOpen={isAddGoalOpen}
-        onClose={() => setAddGoalOpen(false)}
+        onClose={handleCloseGoalModal}
         title="Buat Target Tabungan Baru"
         subtitle="Tetapkan nama target, nominal yang dicapai, dan estimasi waktu"
       >
         <form onSubmit={handleCreateGoal} className="space-y-4 text-xs">
+          {errorMessage && (
+            <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 rounded-xl flex items-center gap-2.5 text-rose-600 dark:text-rose-400">
+              <AlertCircle size={16} className="shrink-0" />
+              <span className="text-xs font-medium">{errorMessage}</span>
+            </div>
+          )}
+
           <div>
             <label className="font-semibold text-zinc-700 dark:text-zinc-300 mb-1 block">Judul Target Tabungan</label>
             <Input
               value={goalTitle}
-              onChange={(e) => setGoalTitle(e.target.value)}
+              onChange={(e) => {
+                setGoalTitle(e.target.value);
+                if (errorMessage) setErrorMessage('');
+              }}
               placeholder="Contoh: Beli Laptop Baru, Dana Umroh, Rumah Pertama"
               required
             />
@@ -107,21 +146,20 @@ export const SavingsGoalList: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="font-semibold text-zinc-700 dark:text-zinc-300 mb-1 block">Nominal Target (IDR)</label>
-              <Input
-                type="number"
+              <RupiahInput
+                label="Nominal Target"
                 value={targetAmount}
-                onChange={(e) => setTargetAmount(e.target.value)}
+                onChange={setTargetAmount}
+                placeholder="Contoh: 15.000.000"
                 required
+                quickChips={[1000000, 5000000, 10000000, 25000000]}
               />
             </div>
             <div>
-              <label className="font-semibold text-zinc-700 dark:text-zinc-300 mb-1 block">Target Tanggal Selesai</label>
-              <Input
-                type="date"
+              <DatePicker
+                label="Target Tanggal Selesai"
                 value={targetDate}
-                onChange={(e) => setTargetDate(e.target.value)}
-                required
+                onChange={setTargetDate}
               />
             </div>
           </div>
@@ -136,7 +174,7 @@ export const SavingsGoalList: React.FC = () => {
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
-            <Button variant="outline" size="md" type="button" onClick={() => setAddGoalOpen(false)}>
+            <Button variant="outline" size="md" type="button" onClick={handleCloseGoalModal}>
               Batal
             </Button>
             <Button variant="emerald" size="md" type="submit" icon={<Target size={16} />}>
@@ -164,13 +202,13 @@ export const SavingsGoalList: React.FC = () => {
           )}
 
           <div>
-            <label className="font-semibold text-zinc-700 dark:text-zinc-300 mb-1 block">Nominal Setoran (IDR)</label>
-            <Input
-              type="number"
+            <RupiahInput
+              label="Nominal Setoran"
               value={depositAmount}
-              onChange={(e) => setDepositAmount(e.target.value)}
-              placeholder="500000"
+              onChange={setDepositAmount}
+              placeholder="Contoh: 500.000"
               required
+              quickChips={[50000, 100000, 500000, 1000000]}
             />
           </div>
 

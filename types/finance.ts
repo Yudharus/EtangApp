@@ -1,4 +1,4 @@
-export type TransactionType = 'expense' | 'income' | 'deposit';
+export type TransactionType = 'expense' | 'income';
 
 export interface PurchasedItem {
   id: string;
@@ -16,7 +16,6 @@ export interface Transaction {
   date: string; // YYYY-MM-DD
   merchant?: string;
   items?: PurchasedItem[];
-  receiptImage?: string;
   notes?: string;
 }
 
@@ -54,3 +53,4 @@ export interface ReceiptScanResult {
   confidenceScore: number;
   mathVerified?: boolean;
 }
+

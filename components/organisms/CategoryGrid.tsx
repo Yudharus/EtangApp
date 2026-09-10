@@ -7,10 +7,12 @@ import { Button } from '@/components/atoms/Button';
 import { Badge } from '@/components/atoms/Badge';
 import { Modal } from '@/components/atoms/Modal';
 import { Input } from '@/components/atoms/Input';
+import { RupiahInput } from '@/components/atoms/RupiahInput';
+import { CustomSelect } from '@/components/atoms/CustomSelect';
 import { Progress } from '@/components/atoms/Progress';
 import { DynamicIcon } from '@/components/atoms/DynamicIcon';
 import { formatRupiah } from '@/utils/cn';
-import { Plus, Trash2, FolderPlus } from 'lucide-react';
+import { Plus, Trash2, FolderPlus, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export const CategoryGrid: React.FC = () => {
@@ -24,17 +26,31 @@ export const CategoryGrid: React.FC = () => {
   } = useFinanceStore();
 
   const [categoryName, setCategoryName] = useState('');
-  const [categoryType, setCategoryType] = useState<'expense' | 'income' | 'deposit'>('expense');
+  const [categoryType, setCategoryType] = useState<'expense' | 'income'>('expense');
   const [monthlyLimit, setMonthlyLimit] = useState<string>('2000000');
   const [categoryIcon, setCategoryIcon] = useState('ShoppingBag');
   const [categoryColor, setCategoryColor] = useState('emerald');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleCreateCategory = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!categoryName.trim()) return;
+    const trimmed = categoryName.trim();
+    if (!trimmed) {
+      setErrorMessage('Nama kategori tidak boleh kosong.');
+      return;
+    }
+
+    // Check duplicate (case-insensitive)
+    const isDuplicate = categories.some(
+      (c) => c.name.trim().toLowerCase() === trimmed.toLowerCase()
+    );
+    if (isDuplicate) {
+      setErrorMessage(`Kategori "${trimmed}" sudah terdaftar. Silakan gunakan nama lain.`);
+      return;
+    }
 
     addCategory({
-      name: categoryName,
+      name: trimmed,
       type: categoryType,
       monthlyLimit: categoryType === 'expense' ? Number(monthlyLimit) : undefined,
       icon: categoryIcon,
@@ -42,6 +58,13 @@ export const CategoryGrid: React.FC = () => {
     });
 
     setCategoryName('');
+    setErrorMessage('');
+    setAddCategoryOpen(false);
+  };
+
+  const handleCloseModal = () => {
+    setCategoryName('');
+    setErrorMessage('');
     setAddCategoryOpen(false);
   };
 
@@ -84,7 +107,7 @@ export const CategoryGrid: React.FC = () => {
                       <h4 className="font-semibold text-sm text-zinc-900 dark:text-zinc-100">{cat.name}</h4>
                       <Badge
                         variant={
-                          cat.type === 'expense' ? 'rose' : cat.type === 'income' ? 'emerald' : 'cyan'
+                          cat.type === 'expense' ? 'rose' : 'emerald'
                         }
                         size="sm"
                       >
@@ -124,48 +147,57 @@ export const CategoryGrid: React.FC = () => {
       {/* Add Category Modal */}
       <Modal
         isOpen={isAddCategoryOpen}
-        onClose={() => setAddCategoryOpen(false)}
+        onClose={handleCloseModal}
         title="Buat Kategori Kustom Baru"
         subtitle="Tambahkan kategori khusus untuk pengelompokan anggaran"
       >
         <form onSubmit={handleCreateCategory} className="space-y-4 text-xs">
+          {errorMessage && (
+            <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 rounded-xl flex items-center gap-2.5 text-rose-600 dark:text-rose-400">
+              <AlertCircle size={16} className="shrink-0" />
+              <span className="text-xs font-medium">{errorMessage}</span>
+            </div>
+          )}
+
           <div>
             <label className="font-semibold text-zinc-700 dark:text-zinc-300 mb-1 block">Nama Kategori</label>
             <Input
               value={categoryName}
-              onChange={(e) => setCategoryName(e.target.value)}
+              onChange={(e) => {
+                setCategoryName(e.target.value);
+                if (errorMessage) setErrorMessage('');
+              }}
               placeholder="Contoh: Langganan SaaS, Fitness, Peliharaan"
               required
             />
           </div>
 
           <div>
-            <label className="font-semibold text-zinc-700 dark:text-zinc-300 mb-1 block">Tipe Kategori</label>
-            <select
+            <CustomSelect
+              label="Tipe Kategori"
+              options={[
+                { value: 'expense', label: 'Pengeluaran (Expense)', badge: 'Expense' },
+                { value: 'income', label: 'Pemasukan (Income)', badge: 'Income' },
+              ]}
               value={categoryType}
-              onChange={(e) => setCategoryType(e.target.value as 'expense' | 'income' | 'deposit')}
-              className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none"
-            >
-              <option value="expense">Pengeluaran (Expense)</option>
-              <option value="income">Pemasukan (Income)</option>
-              <option value="deposit">Setoran Deposito</option>
-            </select>
+              onChange={(val) => setCategoryType(val as 'expense' | 'income')}
+            />
           </div>
 
           {categoryType === 'expense' && (
             <div>
-              <label className="font-semibold text-zinc-700 dark:text-zinc-300 mb-1 block">Batas Batas Pengeluaran Bulanan (IDR)</label>
-              <Input
-                type="number"
+              <RupiahInput
+                label="Batas Pengeluaran Bulanan"
                 value={monthlyLimit}
-                onChange={(e) => setMonthlyLimit(e.target.value)}
-                placeholder="2000000"
+                onChange={setMonthlyLimit}
+                placeholder="Contoh: 2.000.000"
+                quickChips={[500000, 1000000, 2000000, 5000000]}
               />
             </div>
           )}
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
-            <Button variant="outline" size="md" type="button" onClick={() => setAddCategoryOpen(false)}>
+            <Button variant="outline" size="md" type="button" onClick={handleCloseModal}>
               Batal
             </Button>
             <Button variant="emerald" size="md" type="submit" icon={<FolderPlus size={16} />}>

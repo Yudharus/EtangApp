@@ -27,8 +27,9 @@ export default function LandingPage() {
       {/* Navbar */}
       <header className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between relative z-10">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-zinc-950 shadow-lg shadow-emerald-500/25">
-            <WalletCards size={22} />
+          <div className="w-10 h-10 rounded-2xl overflow-hidden shadow-lg shadow-emerald-500/25 flex items-center justify-center shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icon.svg" alt="Etang Icon" className="w-full h-full object-cover" />
           </div>
           <div>
             <span className="text-xl font-black tracking-tight text-white">Etang</span>
@@ -72,7 +73,7 @@ export default function LandingPage() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="text-base sm:text-xl text-zinc-400 max-w-2xl mx-auto font-normal leading-relaxed"
         >
-          Catat pengeluaran harian, pemasukan, setoran deposito, dan scan struk fisik otomatis dengan teknologi Tesseract.js langsung di browser Anda.
+          Catat pengeluaran harian, pemasukan, target tabungan, dan scan struk fisik otomatis dengan teknologi Tesseract.js langsung di browser Anda.
         </motion.p>
 
         <motion.div

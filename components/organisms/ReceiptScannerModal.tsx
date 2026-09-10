@@ -31,57 +31,11 @@ import {
   Save,
   ShieldCheck,
   Languages,
+  AlertTriangle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const MOCK_RECEIPT_SAMPLES = [
-  {
-    name: 'Struk Resto Cafe Bee (Beepos Thermal)',
-    merchant: 'Cafe Bee',
-    date: '2023-05-24',
-    total: 191475,
-    subtotal: 172500,
-    tax: 18975,
-    category: 'Makanan & Minuman',
-    items: [
-      { id: 'item-1', name: 'Bakso', qty: 2, price: 12000 },
-      { id: 'item-2', name: 'Cah Kangkung', qty: 3, price: 7500 },
-      { id: 'item-3', name: 'Cap Jay', qty: 3, price: 17000 },
-      { id: 'item-4', name: 'Cumi Goreng Tepung Gurih', qty: 3, price: 25000 },
-    ],
-    rawText: `& BEEPOS\nCafe Bee\nIT. Kemang Selatan I No.20\nsurabaya, 021-33335800\nTanggal: 24-05-2023 16:45\nKasir : Hafiz\nB NO Trx : JL/0022305241645/004\nMember : CASH\nChannel: Dine In\nBakso\n2 x 12,000 24,000\nCah Kangkung\n3 x 7,500 22,500\nCap Jay\n3 x 17,000 51,000\nCumi Goreng Tepung Gurih\n3 x 25,000 75,000\nSubtotal 172,500\nPajak 18,975\nTotal 191,475\nTUNAI 200,000\nKembalian 8,525\nSupported by bee.id`,
-  },
-  {
-    name: 'Struk Supermarket Superindo',
-    merchant: 'Superindo Express BSD',
-    date: '2026-09-03',
-    total: 245000,
-    subtotal: 245000,
-    tax: 0,
-    category: 'Belanja Bulanan',
-    items: [
-      { id: 'item-1', name: 'Beras Super 5kg', qty: 1, price: 88000 },
-      { id: 'item-2', name: 'Minyak Goreng 2L', qty: 1, price: 37500 },
-      { id: 'item-3', name: 'Daging Ayam Fresh 1kg', qty: 1, price: 44500 },
-      { id: 'item-4', name: 'Susu UHT Cokelat 1L', qty: 2, price: 27500 },
-    ],
-    rawText: `SUPERINDO EXPRESS BSD\nJL. PAHLAWAN NO 88\nTELP: 021-55443322\n\nBERAS SUPER 5KG   1x   88,000\nMINYAK GORENG 2L  1x   37,500\nDAGING AYAM FRESH 1x   44,500\nSUSU UHT COKELAT  2x   27,500   55,000\n-----------------------------\nTOTAL:               RP 245,000\nCASH:                RP 250,000\nKEMBALI:              RP   5,000\nTERIMA KASIH ATAS KUNJUNGAN`,
-  },
-  {
-    name: 'Struk Kafe Kopi Kenangan',
-    merchant: 'Kopi Kenangan Senopati',
-    date: '2026-09-02',
-    total: 68000,
-    subtotal: 68000,
-    tax: 0,
-    category: 'Makanan & Minuman',
-    items: [
-      { id: 'item-1', name: 'Kopi Kenangan Mantan Large', qty: 2, price: 24000 },
-      { id: 'item-2', name: 'Butter Croissant', qty: 1, price: 20000 },
-    ],
-    rawText: `KOPI KENANGAN SENOPATI\nORDER #4402  SEP 02 2026\n\n2x KOPI KENANGAN MANTAN L  48,000\n1x BUTTER CROISSANT        20,000\n-----------------------------\nSUBTOTAL                   68,000\nTOTAL RP                   68,000\nEDC MANDIRI - APPROVED`,
-  },
-];
+
 
 export const ReceiptScannerModal: React.FC = () => {
   const { isScannerOpen, setScannerOpen, categories, addTransaction } = useFinanceStore();
@@ -227,32 +181,7 @@ export const ReceiptScannerModal: React.FC = () => {
     }
   };
 
-  const handleSampleScan = (idx: number) => {
-    const sample = MOCK_RECEIPT_SAMPLES[idx];
-    setScanStep('scanning');
-    setScanProgress(15);
-    setScanStatusMessage('Memuat Contoh Struk Interaktif & Menguji Parser Heuristik...');
 
-    setTimeout(() => {
-      // Pass sample through real parser to demonstrate active heuristic parsing
-      const parsed = parseReceiptText(sample.rawText);
-
-      setMerchantName(parsed.merchantName || sample.merchant);
-      setTransactionDate(parsed.date || sample.date);
-      setTotalAmount(parsed.totalAmount || sample.total);
-      setSubtotalAmount(parsed.subtotalAmount || sample.subtotal || 0);
-      setTaxAmount(parsed.taxAmount || sample.tax || 0);
-      setMathVerified(!!parsed.mathVerified);
-      setConfidenceScore(parsed.confidenceScore);
-      setSelectedCategory(parsed.suggestedCategory || sample.category);
-      setPurchasedItems(parsed.purchasedItems.length > 0 ? parsed.purchasedItems : sample.items);
-      setRawText(sample.rawText);
-      setImagePreviewUrl(null);
-      setCurrentFile(null);
-      setScanProgress(100);
-      setScanStep('verify');
-    }, 500);
-  };
 
   const handleCopyRawText = () => {
     navigator.clipboard.writeText(rawText);
@@ -281,7 +210,6 @@ export const ReceiptScannerModal: React.FC = () => {
       type: 'expense',
       date: transactionDate || new Date().toISOString().split('T')[0],
       items: purchasedItems,
-      receiptImage: imagePreviewUrl || undefined,
       notes: `Hasil Scan Smart OCR (${confidenceScore}% Akurasi${mathVerified ? ' • Terverifikasi Matematis' : ''})`,
     });
 
@@ -397,60 +325,54 @@ export const ReceiptScannerModal: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* File Upload Zone */}
+            <div className="space-y-4">
+              {/* File Upload Zone - Main upload for Web & Mobile */}
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-emerald-500/40 dark:border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 rounded-2xl p-6 text-center space-y-3 hover:border-emerald-500 transition-colors cursor-pointer group flex flex-col items-center justify-center min-h-[180px]"
+                className="border-2 border-dashed border-emerald-500/40 dark:border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 rounded-2xl p-7 text-center space-y-3 hover:border-emerald-500 transition-colors cursor-pointer group flex flex-col items-center justify-center min-h-[170px]"
               >
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <UploadCloud size={26} />
+                <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <UploadCloud size={28} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-xs text-zinc-900 dark:text-zinc-100">Upload Foto Struk</h4>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">JPG, PNG, WEBP (Diproses privat di HP/PC)</p>
+                  <h4 className="font-bold text-sm text-zinc-900 dark:text-zinc-100">Upload Foto Struk</h4>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                    Drag & drop atau klik untuk memilih file struk (JPG, PNG, WEBP)
+                  </p>
+                  <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-1">
+                    Diproses privat di perangkat Anda • Privasi terjamin
+                  </p>
                 </div>
               </div>
 
-              {/* Camera Capture Zone */}
+              {/* Camera Capture Zone - Visible ONLY on Mobile devices, removed in web mode */}
               <div
                 onClick={() => cameraInputRef.current?.click()}
-                className="border-2 border-dashed border-teal-500/40 dark:border-teal-500/30 bg-teal-50/40 dark:bg-teal-950/20 rounded-2xl p-6 text-center space-y-3 hover:border-teal-500 transition-colors cursor-pointer group flex flex-col items-center justify-center min-h-[180px]"
+                className="md:hidden border-2 border-dashed border-teal-500/40 dark:border-teal-500/30 bg-teal-50/40 dark:bg-teal-950/20 rounded-2xl p-4 text-center space-y-2 hover:border-teal-500 transition-colors cursor-pointer group flex flex-col items-center justify-center min-h-[120px]"
               >
-                <div className="w-12 h-12 rounded-2xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Camera size={26} />
+                <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Camera size={22} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-xs text-zinc-900 dark:text-zinc-100">Ambil Foto Kamera</h4>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Jepret langsung struk fisik dengan kamera</p>
+                  <h4 className="font-bold text-xs text-zinc-900 dark:text-zinc-100">Ambil Foto Kamera (Mobile)</h4>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Jepret langsung struk fisik dengan kamera HP</p>
                 </div>
               </div>
             </div>
 
-            <div>
-              <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-2.5">
-                Atau Uji Contoh Struk Nyata (Benchmark Parser):
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {MOCK_RECEIPT_SAMPLES.map((sample, idx) => (
-                  <motion.div
-                    key={sample.name}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleSampleScan(idx)}
-                    className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-500 cursor-pointer flex items-center gap-3 transition-colors"
-                  >
-                    <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 shrink-0">
-                      <ShoppingBag size={18} />
-                    </div>
-                    <div className="min-w-0">
-                      <h5 className="font-semibold text-xs text-zinc-900 dark:text-zinc-100 truncate">{sample.name}</h5>
-                      <p className="text-[10px] text-zinc-400 truncate">{sample.merchant} • {formatRupiah(sample.total)}</p>
-                    </div>
-                  </motion.div>
-                ))}
+            {/* AI Accuracy Disclaimer Notice */}
+            <div className="p-3.5 bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 rounded-2xl flex items-start gap-3 text-xs">
+              <AlertTriangle className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" size={16} />
+              <div className="space-y-1">
+                <p className="font-semibold text-amber-900 dark:text-amber-200">
+                  Perhatian: Hasil Pemindaian Struk Tidak 100% Akurat
+                </p>
+                <p className="text-[11px] leading-relaxed text-amber-800/90 dark:text-amber-300/90">
+                  Hasil ekstraksi teks OCR cerdas menggunakan pemrosesan gambar dan algoritma AI yang <strong>tidak selalu 100% akurat</strong>. Kualitas cetak tinta kasir, lipatan kertas, dan pencahayaan foto dapat mempengaruhi hasil pembacaan. Anda selalu dapat meninjau dan mengoreksi rincian data sebelum menyimpannya ke pencatatan transaksi.
+                </p>
               </div>
             </div>
+
           </div>
         )}
 
@@ -514,6 +436,14 @@ export const ReceiptScannerModal: React.FC = () => {
                   <Eye size={13} /> {showRawText ? 'Sembunyikan Raw' : 'Lihat Teks OCR'}
                 </button>
               </div>
+            </div>
+
+            {/* AI OCR Accuracy Notice */}
+            <div className="p-3 bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/25 rounded-xl flex items-start gap-2.5 text-xs text-amber-800 dark:text-amber-200">
+              <AlertCircle size={15} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <p className="text-[11px] leading-relaxed text-amber-800/90 dark:text-amber-300/90">
+                <span className="font-semibold">Catatan Penting:</span> Hasil pemindaian OCR cerdas <strong>tidak 100% akurat</strong>. Mohon verifikasi kembali nama merchant, tanggal transaksi, daftar item, serta total nominal sebelum menyimpan.
+              </p>
             </div>
 
             {/* Optional Image & Raw OCR Text preview tab */}

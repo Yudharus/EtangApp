@@ -1,19 +1,25 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import Link from 'next/link';
 import { useFinanceStore } from '@/stores/useFinanceStore';
 import { AppHeader } from '@/components/organisms/AppHeader';
 import { AppSidebar } from '@/components/organisms/AppSidebar';
 import { ReceiptScannerModal } from '@/components/organisms/ReceiptScannerModal';
 import { AddTransactionModal } from '@/components/organisms/AddTransactionModal';
+import { AuthModal } from '@/components/organisms/AuthModal';
+import { Button } from '@/components/atoms/Button';
 import {
   LayoutDashboard,
   ReceiptText,
   TrendingUp,
-  PiggyBank,
   FolderOpen,
   Target,
   Scan,
+  Lock,
+  LogIn,
+  ArrowLeft,
+  WalletCards,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -22,8 +28,116 @@ export interface AppLayoutTemplateProps {
 }
 
 export const AppLayoutTemplate: React.FC<AppLayoutTemplateProps> = ({ children }) => {
-  const { activeTab, setActiveTab, setScannerOpen } = useFinanceStore();
+  const {
+    activeTab,
+    setActiveTab,
+    setScannerOpen,
+    initAuth,
+    user,
+    authLoading,
+    setAuthModalOpen,
+  } = useFinanceStore();
 
+  useEffect(() => {
+    const cleanup = initAuth();
+    return () => {
+      cleanup?.();
+    };
+  }, [initAuth]);
+
+  // Open AuthModal automatically when unauthenticated on /app
+  useEffect(() => {
+    if (!authLoading && !user) {
+      setAuthModalOpen(true);
+    }
+  }, [authLoading, user, setAuthModalOpen]);
+
+  // 1. Loading State while checking Supabase session
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center text-white font-sans">
+        <motion.div
+          animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+          className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-zinc-950 shadow-xl shadow-emerald-500/30 mb-4"
+        >
+          <WalletCards size={28} />
+        </motion.div>
+        <p className="text-xs font-semibold text-zinc-400 animate-pulse">
+          Memeriksa sesi otentikasi...
+        </p>
+      </div>
+    );
+  }
+
+  // 2. Protected Screen: User not logged in
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col font-sans">
+        <AppHeader />
+
+        <main className="flex-1 flex items-center justify-center p-6 relative overflow-hidden">
+          {/* Ambient Glows */}
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[550px] h-[350px] bg-emerald-500/10 blur-[130px] pointer-events-none rounded-full" />
+          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[300px] bg-teal-500/10 blur-[120px] pointer-events-none rounded-full" />
+
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="max-w-md w-full bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-8 shadow-2xl text-center space-y-6 relative z-10"
+          >
+            <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center shadow-inner">
+              <Lock size={30} />
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800">
+                Akses Terproteksi
+              </span>
+              <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 pt-1">
+                Silakan Masuk Terlebih Dahulu
+              </h2>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-sm mx-auto">
+                Untuk mengakses dashboard keuangan, ringkasan transaksi, serta target tabungan, Anda harus terautentikasi terlebih dahulu agar data tersimpan aman di database Supabase.
+              </p>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <Button
+                variant="emerald"
+                size="lg"
+                onClick={() => setAuthModalOpen(true)}
+                className="w-full shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 font-bold"
+              >
+                <LogIn size={16} /> Masuk / Daftar Akun
+              </Button>
+
+              <Link href="/" className="block">
+                <Button
+                  variant="outline"
+                  size="md"
+                  className="w-full border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 flex items-center justify-center gap-1.5"
+                >
+                  <ArrowLeft size={14} /> Kembali ke Beranda
+                </Button>
+              </Link>
+            </div>
+
+            <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800/80">
+              <p className="text-[11px] text-zinc-400">
+                💡 Belum memiliki akun? Gunakan opsi <strong>Akun Demo</strong> di dalam form masuk untuk langsung menjelajah.
+              </p>
+            </div>
+          </motion.div>
+        </main>
+
+        <AuthModal />
+      </div>
+    );
+  }
+
+  // 3. Authenticated Workspace
   const mobileNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'transactions', label: 'Transaksi', icon: ReceiptText },

@@ -6,6 +6,7 @@ import { Card } from '@/components/atoms/Card';
 import { Button } from '@/components/atoms/Button';
 import { Badge } from '@/components/atoms/Badge';
 import { Modal } from '@/components/atoms/Modal';
+import { CustomSelect } from '@/components/atoms/CustomSelect';
 import { formatRupiah } from '@/utils/cn';
 import { Transaction } from '@/types/finance';
 import {
@@ -16,13 +17,12 @@ import {
   Receipt,
   ArrowUpRight,
   TrendingDown,
-  PiggyBank,
   Eye,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface TransactionTableProps {
-  filterType?: 'all' | 'expense' | 'income' | 'deposit';
+  filterType?: 'all' | 'expense' | 'income';
 }
 
 export const TransactionTable: React.FC<TransactionTableProps> = ({ filterType = 'all' }) => {
@@ -39,7 +39,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ filterType =
   } = useFinanceStore();
 
   const [selectedTxForDetail, setSelectedTxForDetail] = useState<Transaction | null>(null);
-  const [activeTabFilter, setActiveTabFilter] = useState<'all' | 'expense' | 'income' | 'deposit'>(filterType);
+  const [activeTabFilter, setActiveTabFilter] = useState<'all' | 'expense' | 'income'>(filterType);
 
   // Filter transactions
   const filteredTransactions = transactions.filter((t) => {
@@ -66,7 +66,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ filterType =
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
           {/* Tabs Filter */}
           <div className="flex items-center gap-1 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
-            {(['all', 'expense', 'income', 'deposit'] as const).map((tab) => (
+            {(['all', 'expense', 'income'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTabFilter(tab)}
@@ -80,9 +80,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ filterType =
                   ? 'Semua'
                   : tab === 'expense'
                   ? 'Pengeluaran'
-                  : tab === 'income'
-                  ? 'Pemasukan'
-                  : 'Deposito'}
+                  : 'Pemasukan'}
               </button>
             ))}
           </div>
@@ -121,20 +119,21 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ filterType =
             />
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Filter size={14} className="text-zinc-400 shrink-0" />
-            <select
+          <div className="w-full sm:w-56">
+            <CustomSelect
+              options={[
+                { value: 'all', label: 'Semua Kategori' },
+                ...categories.map((c) => ({
+                  value: c.name,
+                  label: c.name,
+                  icon: c.icon,
+                  badge: c.type === 'expense' ? 'Expense' : 'Income',
+                })),
+              ]}
               value={selectedCategoryFilter}
-              onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-              className="bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-1.5 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none"
-            >
-              <option value="all">Semua Kategori</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.name}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedCategoryFilter}
+              placeholder="Filter Kategori"
+            />
           </div>
         </div>
       </Card>
@@ -178,17 +177,13 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ filterType =
                           className={`p-2 rounded-xl shrink-0 ${
                             tx.type === 'expense'
                               ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400'
-                              : tx.type === 'income'
-                              ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400'
-                              : 'bg-cyan-50 text-cyan-600 dark:bg-cyan-950/50 dark:text-cyan-400'
+                              : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400'
                           }`}
                         >
                           {tx.type === 'expense' ? (
                             <TrendingDown size={16} />
-                          ) : tx.type === 'income' ? (
-                            <ArrowUpRight size={16} />
                           ) : (
-                            <PiggyBank size={16} />
+                            <ArrowUpRight size={16} />
                           )}
                         </div>
                         <div>
@@ -207,24 +202,30 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ filterType =
 
                     <td className="py-3.5 px-4">
                       <Badge
-                        variant={
-                          tx.type === 'expense' ? 'rose' : tx.type === 'income' ? 'emerald' : 'cyan'
-                        }
+                        variant={tx.type === 'expense' ? 'rose' : 'emerald'}
                       >
                         {tx.category}
                       </Badge>
                     </td>
 
-                    <td className="py-3.5 px-4 text-zinc-500">{tx.date}</td>
+                    <td className="py-3.5 px-4 text-zinc-500 font-medium">
+                      {(() => {
+                        if (!tx.date) return '-';
+                        const parts = tx.date.split(' ')[0].split('-');
+                        if (parts.length === 3) {
+                          const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                          return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                        }
+                        return tx.date;
+                      })()}
+                    </td>
 
                     <td className="py-3.5 px-4 text-right font-bold">
                       <span
                         className={
                           tx.type === 'expense'
                             ? 'text-rose-500'
-                            : tx.type === 'income'
-                            ? 'text-emerald-600 dark:text-emerald-400'
-                            : 'text-cyan-600 dark:text-cyan-400'
+                            : 'text-emerald-600 dark:text-emerald-400'
                         }
                       >
                         {tx.type === 'expense' ? '-' : '+'}{formatRupiah(tx.amount)}

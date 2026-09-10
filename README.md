@@ -15,13 +15,12 @@
 
 ---
 
-## 🛠️ Tech Stack (Frontend)
-
-> **Note**: This application is currently running purely on the **Frontend** with mock/dummy data managed via client-side state. No backend server or database is required.
+## 🛠️ Tech Stack
 
 - **Core Framework**: [Next.js 16 (App Router)](https://nextjs.org/) + [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
+- **Backend & Database**: [Supabase](https://supabase.com/) (PostgreSQL with Row Level Security & GoTrue Auth)
 - **Styling & UI Components**: [Tailwind CSS v4](https://tailwindcss.com/), [Framer Motion](https://www.framer.com/motion/), [Lucide React Icons](https://lucide.dev/)
-- **State Management**: [Zustand v5](https://zustand-demo.pmnd.rs/) (Client-side state management with mock data)
+- **State Management**: [Zustand v5](https://zustand-demo.pmnd.rs/) (Real-time synchronization with Supabase)
 - **Data Visualization**: [Recharts](https://recharts.org/)
 - **Client-Side OCR & Image Processing**: [Tesseract.js](https://tesseract.projectnaptha.com/) + HTML5 Canvas API
 
@@ -37,9 +36,9 @@ etang-app/
 │   ├── molecules/        # Combinations of atoms (form fields, stat cards)
 │   ├── organisms/        # Complex UI modules (header, transaction tables, scanner modal)
 │   └── templates/        # Page layout structures
-├── stores/               # Zustand state stores & initial mock datasets
+├── stores/               # Zustand state stores synchronized with Supabase
 ├── types/                # TypeScript interface and type definitions
-├── utils/                # Utility modules (OCR engine, canvas image processor, formatters)
+├── utils/                # Utility modules (Supabase client, OCR engine, canvas image processor)
 └── public/               # Static assets & OCR trained language data
 ```
 

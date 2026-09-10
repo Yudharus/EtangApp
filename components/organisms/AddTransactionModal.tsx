@@ -5,6 +5,9 @@ import { useFinanceStore } from '@/stores/useFinanceStore';
 import { Modal } from '@/components/atoms/Modal';
 import { Button } from '@/components/atoms/Button';
 import { Input } from '@/components/atoms/Input';
+import { RupiahInput } from '@/components/atoms/RupiahInput';
+import { CustomSelect } from '@/components/atoms/CustomSelect';
+import { DatePicker } from '@/components/atoms/DatePicker';
 import { TransactionType } from '@/types/finance';
 import { Plus } from 'lucide-react';
 
@@ -26,7 +29,7 @@ export const AddTransactionModal: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !amount) return;
+    if (!title.trim() || !amount || Number(amount) <= 0) return;
 
     addTransaction({
       title,
@@ -46,34 +49,45 @@ export const AddTransactionModal: React.FC = () => {
     setAddTransactionOpen(false);
   };
 
+  const categoryOptions = categories
+    .filter((c) => c.type === type)
+    .map((c) => ({
+      value: c.name,
+      label: c.name,
+      icon: c.icon,
+      badge: c.type === 'expense' ? 'Pengeluaran' : 'Pemasukan',
+    }));
+
   return (
     <Modal
       isOpen={isAddTransactionOpen}
       onClose={() => setAddTransactionOpen(false)}
       title="Catat Transaksi Baru Manual"
-      subtitle="Rekam pengeluaran, pemasukan, atau setoran deposito"
+      subtitle="Rekam pengeluaran atau pemasukan baru ke dalam sistem"
     >
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
         {/* Type Selector Tabs */}
         <div>
           <label className="font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5 block">Tipe Transaksi</label>
-          <div className="grid grid-cols-3 gap-2 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
-            {(['expense', 'income', 'deposit'] as const).map((t) => (
+          <div className="grid grid-cols-2 gap-2 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
+            {(['expense', 'income'] as const).map((t) => (
               <button
                 key={t}
                 type="button"
-                onClick={() => setType(t)}
+                onClick={() => {
+                  setType(t);
+                  const firstMatch = categories.find((c) => c.type === t);
+                  if (firstMatch) setCategory(firstMatch.name);
+                }}
                 className={`py-2 rounded-lg text-xs font-semibold capitalize transition-all ${
                   type === t
                     ? t === 'expense'
                       ? 'bg-rose-500 text-white shadow-sm'
-                      : t === 'income'
-                      ? 'bg-emerald-500 text-white shadow-sm'
-                      : 'bg-cyan-500 text-white shadow-sm'
+                      : 'bg-emerald-500 text-white shadow-sm'
                     : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
                 }`}
               >
-                {t === 'expense' ? 'Pengeluaran' : t === 'income' ? 'Pemasukan' : 'Deposito'}
+                {t === 'expense' ? 'Pengeluaran' : 'Pemasukan'}
               </button>
             ))}
           </div>
@@ -99,41 +113,32 @@ export const AddTransactionModal: React.FC = () => {
             />
           </div>
           <div>
-            <label className="font-semibold text-zinc-700 dark:text-zinc-300 mb-1 block">Nominal Transaksi (IDR)</label>
-            <Input
-              type="number"
+            <RupiahInput
+              label="Nominal Transaksi"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="45000"
+              onChange={setAmount}
+              placeholder="Contoh: 45.000"
               required
+              quickChips={[10000, 20000, 50000, 100000]}
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="font-semibold text-zinc-700 dark:text-zinc-300 mb-1 block">Pilih Kategori</label>
-            <select
+            <CustomSelect
+              label="Pilih Kategori"
+              options={categoryOptions}
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              {categories
-                .filter((c) => c.type === type)
-                .map((c) => (
-                  <option key={c.id} value={c.name}>
-                    {c.name}
-                  </option>
-                ))}
-            </select>
+              onChange={setCategory}
+              placeholder="Pilih kategori..."
+            />
           </div>
           <div>
-            <label className="font-semibold text-zinc-700 dark:text-zinc-300 mb-1 block">Tanggal Transaksi</label>
-            <Input
-              type="date"
+            <DatePicker
+              label="Tanggal Transaksi"
               value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
+              onChange={setDate}
             />
           </div>
         </div>

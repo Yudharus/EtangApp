@@ -16,7 +16,6 @@ export default function WorkspacePage() {
       {activeTab === 'dashboard' && <FinanceDashboardOverview />}
       {activeTab === 'transactions' && <TransactionTable filterType="all" />}
       {activeTab === 'income' && <TransactionTable filterType="income" />}
-      {activeTab === 'deposits' && <TransactionTable filterType="deposit" />}
       {activeTab === 'categories' && <CategoryGrid />}
       {activeTab === 'goals' && <SavingsGoalList />}
     </AppLayoutTemplate>
